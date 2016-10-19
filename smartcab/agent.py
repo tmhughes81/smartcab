@@ -24,8 +24,8 @@ class LearningAgent(Agent):
 
         # TODO: Update state
         
-        # TODO: Select action according to your policy
-        action = None
+        # Select action according to your policy
+        action = self.policy()
 
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -33,7 +33,12 @@ class LearningAgent(Agent):
         # TODO: Learn policy based on state, action, reward
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
-
+    
+    def policy(self):
+        """ Returns a proper action based on the current state """
+        actions = [None, 'forward', 'left', 'right']
+        
+        return actions[random.randint(0, 3)]   
 
 def run():
     """Run the agent for a finite number of trials."""
