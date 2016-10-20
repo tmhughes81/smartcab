@@ -11,9 +11,9 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        self.alpha = 0.5 # Learning Rate
-        self.gamma = 0.5 # Discount Rate
-        self.epsilon = 0.02 # Exploration Rate
+        self.alpha = 0.75 # Learning Rate
+        self.gamma = 0.1 # Discount Rate
+        self.epsilon = 0 # Exploration Rate, as an integer percent from 0-99
         
         # Table to store expected rewards for various states
         self.Q_table = {}
@@ -63,8 +63,8 @@ class LearningAgent(Agent):
         # We're going to need our start state and end-state for our Q update
         start_state = self.state
         
-        # Select action according to your policy
-        action = self.policy(start_state)
+        # Select action according to your policy.  Set optimal to false to explore
+        action = self.policy(start_state, optimal=False)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
@@ -78,8 +78,13 @@ class LearningAgent(Agent):
 
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
     
-    def policy(self, s):
+    def policy(self, s, optimal=True):
         """ Returns estimated best action based on a state 's' """
+        # Handle exploration first.  If we randomly come in below epsilon, just
+        # go a random direction.  Only do this if 'optimal' is set to 'false' 
+        if not optimal and random.randint(0, 99) < self.epsilon:
+            return [None, 'forward', 'left', 'right'][random.randint(0, 3)]
+        
         # We don't need 'None' here because we initialize our viable actions with
         # the values for 'None'
         actions = ['forward', 'left', 'right']
@@ -146,7 +151,7 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.5, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.0, display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
