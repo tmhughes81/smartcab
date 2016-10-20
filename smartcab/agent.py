@@ -10,7 +10,7 @@ class LearningAgent(Agent):
         super(LearningAgent, self).__init__(env)  # sets self.env = env, state = None, next_waypoint = None, and a default color
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
-        # TODO: Initialize any additional variables here
+        # Initialize any additional variables here
         self.alpha = 0.75 # Learning Rate
         self.gamma = 0.1 # Discount Rate
         self.epsilon = 0 # Exploration Rate, as an integer percent from 0-99
@@ -37,7 +37,7 @@ class LearningAgent(Agent):
     
     def reset(self, destination=None):
         self.planner.route_to(destination)
-        # TODO: Prepare for a new trip; reset any variables here, if required
+        # Prepare for a new trip; reset any variables here, if required
     
     def set_state(self, inputs):
         """ Takes a set of inputs and defines a state that will be used by our
