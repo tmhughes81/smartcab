@@ -70,6 +70,7 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
         
         # Now that we've taken an action, we can get our end_state
+        inputs = self.env.sense(self)
         self.set_state(inputs)
         end_state = self.state
         
