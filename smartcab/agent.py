@@ -101,39 +101,33 @@ class LearningAgent(Agent):
         #print "LearningAgent.update(): successes = {}".format(self.success)
     
     def policy(self, s, optimal=True):
+        # Consider all actions we might use
+        actions = [None, 'forward', 'left', 'right']
+
         """ Returns estimated best action based on a state 's' """
         # Handle exploration first.  If we randomly come in below epsilon, just
         # go a random direction.  Only do this if 'optimal' is set to 'false' 
         if not optimal and random.randint(0, 99) < self.epsilon:
-            return [None, 'forward', 'left', 'right'][random.randint(0, 3)]
+            return random.choice(actions)
         
-        # We don't need 'None' here because we initialize our viable actions with
-        # the values for 'None'
-        actions = ['forward', 'left', 'right']
-
         # Convert our state into a tuple for lookup purposes
         s = self.tuple_state(s)
         
-        # Initialize our viable actions by assuming no action is the best action
-        # until we see a better option.
-        threshold = self.Q_table[(s, None)]
-        viable_actions = [None]
+        # Previous version had a threshold counter loop I was using; as per
+        # Reviewer #1, I've used his list comprehension version of the code,
+        # as it is less complicated than what I was doing.  Credit should
+        # definitely be given to reviewer 1 for this.
         
-        # Go through all options for actions, and check if they exceed our current
-        # threshold.  If they are the same as the threshold, add it to the list of
-        # viable actions.  If the action exceeds the threshold, eliminate all
-        # prior viable actions, and use this as our new threshold.
-        for a in actions:
-            if self.Q_table[(s, a)] == threshold:
-                viable_actions.append(a)
-            elif self.Q_table[(s, a)] > threshold:
-                viable_actions = [a]
-                threshold = self.Q_table[(s,a)]
+        # get the maximum q-value for the state
+        max_qval = max([self.Q_table[(s, a)] for a in actions])
         
-        # Take a random action from our list of viable actions.  This list will
-        # only be longer than 1 in the event that there are multiple actions
-        # in this state with the same estimated utility
-        return viable_actions[random.randint(0, (len(viable_actions)-1))]
+        # find the actions that yield the maximum q-value
+        best_actions = [a for a in actions if self.Q_table[(s, a)] == max_qval]
+        
+        # randomly pick one of the best actions
+        action = random.choice(best_actions)
+        
+        return action
     
     def Q_hat(self, s, a, r, s_prime):
         """ This is our learning algorithm.  It takes a state 's', action 'a',
