@@ -11,9 +11,18 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # Initialize any additional variables here
-        self.alpha = 0.75 # Learning Rate
+        self.alpha = 0.9 # Learning Rate
         self.gamma = 0.1 # Discount Rate
         self.epsilon = 0 # Exploration Rate, as an integer percent from 0-99
+        
+        # Success measure
+        self.success = 0
+        self.no_penalty = True
+        
+        # For Q Updates
+        self.prev_state = None
+        self.prev_action = None
+        self.prev_reward = None
         
         # Table to store expected rewards for various states
         self.Q_table = {}
@@ -38,6 +47,9 @@ class LearningAgent(Agent):
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # Prepare for a new trip; reset any variables here, if required
+        # Reset our no_penalty flag for success tracking
+        self.no_penalty = True
+        self.prev_state = None
     
     def set_state(self, inputs):
         """ Takes a set of inputs and defines a state that will be used by our
@@ -60,24 +72,33 @@ class LearningAgent(Agent):
         # Update state
         self.set_state(inputs)
         
-        # We're going to need our start state and end-state for our Q update
-        start_state = self.state
+        # Learn policy based on previous state, previous action, previous reward, and current state, so long as we have a prev_state
+        if self.prev_state != None:
+            self.Q_hat(self.prev_state, self.prev_action, self.prev_reward, self.state)
         
         # Select action according to your policy.  Set optimal to false to explore
-        action = self.policy(start_state, optimal=False)
+        action = self.policy(self.state, optimal=False)
 
         # Execute action and get reward
         reward = self.env.act(self, action)
         
-        # Now that we've taken an action, we can get our end_state
-        inputs = self.env.sense(self)
-        self.set_state(inputs)
-        end_state = self.state
+        # Now that we've taken an action, record everything from this action to pass to the next update
+        self.prev_action = action
+        self.prev_reward = reward
+        self.prev_state = self.state
         
-        # Learn policy based on start state, action, reward, end_state
-        self.Q_hat(start_state, action, reward, end_state)
-
+        
+        # If we were penalized, we don't want to record this run as a success
+        if reward < 0:
+            self.no_penalty = False
+        
+        # Record success if we have triggered no penalties and reached our destination
+        if self.no_penalty and self.env.agent_states[self]['location'] == self.env.agent_states[self]['destination']:
+            self.success += 1
+        
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
+        # Uncomment this line if you want to get success count updates; bit spammy
+        #print "LearningAgent.update(): successes = {}".format(self.success)
     
     def policy(self, s, optimal=True):
         """ Returns estimated best action based on a state 's' """
@@ -157,7 +178,6 @@ def run():
 
     sim.run(n_trials=100)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
-
 
 if __name__ == '__main__':
     run()
